@@ -3,432 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>2D Pixel Open World Multiplayer RPG</title>
-    <!-- PeerJS CDN: Sunucusuz Gerçek Zamanlı Multiplayer Altyapısı (404 / Sunucu Hatalarını Önler) -->
+    <title>2D Yuvarlak Karakter Multiplayer RPG</title>
+    <!-- PeerJS: Multiplayer Altyapısı -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-            -webkit-user-select: none;
-            font-family: 'Courier New', Courier, monospace, sans-serif;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Courier New', Courier, monospace; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background: #000; color: #fff; }
 
-        body, html {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background: #000;
-            color: #fff;
-        }
-
-        /* LOBİ VE ARAYÜZ EKRANI */
+        /* LOBİ EKRANI */
         #auth-screen {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 1000;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000;
             background: linear-gradient(135deg, #0f172a, #1e1b4b);
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            display: flex; justify-content: center; align-items: center;
         }
+        .auth-card { background: #1e293b; border: 4px solid #38bdf8; border-radius: 12px; padding: 24px; width: 360px; max-width: 90%; text-align: center; }
+        .auth-card h1 { font-size: 20px; color: #38bdf8; margin-bottom: 16px; }
+        .input-group { margin-bottom: 12px; text-align: left; }
+        .input-group label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 4px; font-weight: bold; }
+        .input-group input[type="text"], .input-group select { width: 100%; padding: 10px; border-radius: 6px; border: 2px solid #475569; background: #0f172a; color: #fff; text-align: center; }
+        
+        .photo-upload-area { display: flex; align-items: center; gap: 10px; background: #0f172a; padding: 10px; border-radius: 6px; border: 2px solid #475569; }
+        .photo-preview { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #38bdf8; background: #334155; object-fit: cover; }
+        .btn-upload { background: #3b82f6; color: white; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; border: none; font-weight: bold; }
 
-        .auth-card {
-            background: #1e293b;
-            border: 4px solid #38bdf8;
-            border-radius: 12px;
-            padding: 24px;
-            width: 360px;
-            max-width: 90%;
-            text-align: center;
-            box-shadow: 0 0 30px rgba(56, 189, 248, 0.4);
-        }
+        .btn-start { width: 100%; padding: 12px; background: #22c55e; border: 3px solid #15803d; border-radius: 6px; color: white; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 10px; }
 
-        .auth-card h1 {
-            font-size: 20px;
-            color: #38bdf8;
-            margin-bottom: 16px;
-            text-shadow: 2px 2px #000;
-        }
-
-        .input-group {
-            margin-bottom: 12px;
-            text-align: left;
-        }
-
-        .input-group label {
-            display: block;
-            font-size: 11px;
-            color: #94a3b8;
-            margin-bottom: 4px;
-            font-weight: bold;
-        }
-
-        .input-group input[type="text"], .input-group select {
-            width: 100%;
-            padding: 10px;
-            border-radius: 6px;
-            border: 2px solid #475569;
-            background: #0f172a;
-            color: #fff;
-            font-size: 13px;
-            text-align: center;
-            outline: none;
-        }
-
-        .btn-start {
-            width: 100%;
-            padding: 12px;
-            background: #22c55e;
-            border: 3px solid #15803d;
-            border-radius: 6px;
-            color: white;
-            font-size: 15px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        .btn-secondary {
-            background: #3b82f6;
-            border-color: #1d4ed8;
-            margin-top: 6px;
-        }
-
-        /* OYUN HUD */
-        #game-ui {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            display: none;
-            z-index: 100;
-        }
-
-        #player-hud {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            width: 240px;
-            background: rgba(15, 23, 42, 0.9);
-            border: 3px solid #334155;
-            border-radius: 8px;
-            padding: 8px;
-            pointer-events: auto;
-        }
-
-        .hud-title {
-            font-size: 12px;
-            font-weight: bold;
-            color: #fbbf24;
-            margin-bottom: 4px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .bar-container {
-            width: 100%;
-            height: 16px;
-            background: #1e293b;
-            border: 1px solid #475569;
-            border-radius: 4px;
-            margin-bottom: 6px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .bar-fill-hp { width: 100%; height: 100%; background: #ef4444; transition: width 0.2s; }
-        .bar-fill-xp { width: 0%; height: 100%; background: #3b82f6; transition: width 0.2s; }
-
-        .bar-text {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 10px;
-            font-weight: bold;
-            text-shadow: 1px 1px 2px #000;
-        }
-
-        #btn-inventory-toggle {
-            position: absolute;
-            top: 50%;
-            left: 15px;
-            transform: translateY(-50%);
-            width: 54px;
-            height: 54px;
-            background: #1e293b;
-            border: 3px solid #f59e0b;
-            border-radius: 8px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 26px;
-            cursor: pointer;
-            pointer-events: auto;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
-
-        #top-right-hud {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            display: flex;
-            gap: 8px;
-            pointer-events: auto;
-        }
-
-        .hud-btn {
-            background: #1e293b;
-            border: 3px solid #38bdf8;
-            border-radius: 8px;
-            padding: 8px 10px;
-            font-size: 11px;
-            font-weight: bold;
-            color: #fff;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            position: relative;
-        }
-
-        .badge {
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            background: #ef4444;
-            color: #fff;
-            border-radius: 50%;
-            width: 18px;
-            height: 18px;
-            font-size: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        /* HOTBAR */
-        #hotbar {
-            position: absolute;
-            bottom: 15px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 8px;
-            background: rgba(15, 23, 42, 0.9);
-            padding: 8px;
-            border-radius: 10px;
-            border: 3px solid #334155;
-            pointer-events: auto;
-        }
-
-        .hot-slot {
-            width: 46px;
-            height: 46px;
-            background: #1e293b;
-            border: 2px solid #475569;
-            border-radius: 6px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 20px;
-            position: relative;
-            cursor: pointer;
-        }
-
-        .hot-slot.selected {
-            border-color: #f59e0b;
-            box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
-        }
-
-        .slot-num {
-            position: absolute;
-            top: 2px;
-            left: 4px;
-            font-size: 9px;
-            color: #94a3b8;
-        }
+        /* OYUN İÇİ HUD */
+        #game-ui { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: none; z-index: 100; }
+        #room-info-badge { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); border: 2px solid #f59e0b; color: #fbbf24; padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 14px; pointer-events: auto; display: none; }
+        #player-hud { position: absolute; top: 15px; left: 15px; width: 220px; background: rgba(15, 23, 42, 0.9); border: 3px solid #334155; border-radius: 8px; padding: 8px; pointer-events: auto; }
+        .hud-title { font-size: 12px; font-weight: bold; color: #fbbf24; display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .bar-container { width: 100%; height: 14px; background: #1e293b; border-radius: 4px; position: relative; overflow: hidden; margin-bottom: 5px; }
+        .bar-fill-hp { height: 100%; background: #ef4444; width: 100%; }
+        .bar-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; font-size: 10px; font-weight: bold; text-align: center; line-height: 14px; }
 
         /* MOBİL JOYSTICK */
-        #joystick-zone {
-            position: absolute;
-            bottom: 25px;
-            left: 25px;
-            width: 120px;
-            height: 120px;
-            pointer-events: auto;
-            touch-action: none;
-            display: none; /* Varsayılan: Seçime Göre Açılır */
-        }
-
-        #joystick-base {
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.15);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            position: relative;
-        }
-
-        #joystick-stick {
-            width: 50px;
-            height: 50px;
-            background: rgba(56, 189, 248, 0.8);
-            border: 2px solid #fff;
-            border-radius: 50%;
-            position: absolute;
-            top: 33px;
-            left: 33px;
-        }
-
-        /* MODALLAR */
-        .modal {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.75);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 500;
-            pointer-events: auto;
-        }
-
-        .modal-content {
-            background: #1e293b;
-            border: 4px solid #3b82f6;
-            border-radius: 12px;
-            padding: 20px;
-            width: 440px;
-            max-width: 95%;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            position: relative;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 14px;
-            border-bottom: 2px solid #334155;
-            padding-bottom: 8px;
-        }
-
-        .modal-header h2 { font-size: 15px; color: #38bdf8; }
-        .close-btn { font-size: 18px; color: #ef4444; cursor: pointer; font-weight: bold; }
-
-        /* ENVANTER GRİD (3x9 = 27 SLOT) */
-        .inv-grid {
-            display: grid;
-            grid-template-columns: repeat(9, 1fr);
-            gap: 5px;
-        }
-
-        .inv-slot {
-            width: 36px;
-            height: 36px;
-            background: #0f172a;
-            border: 2px solid #334155;
-            border-radius: 4px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 16px;
-            position: relative;
-        }
-
-        .inv-count {
-            position: absolute;
-            bottom: 1px;
-            right: 2px;
-            font-size: 8px;
-            color: #fbbf24;
-            font-weight: bold;
-        }
-
-        .stat-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #0f172a;
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 8px;
-            border: 1px solid #334155;
-        }
-
-        .stat-btn {
-            background: #22c55e;
-            border: none;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .stat-btn:disabled { background: #475569; cursor: not-allowed; }
-
-        .shop-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #0f172a;
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 8px;
-        }
-
-        .shop-btn {
-            background: #f59e0b;
-            border: none;
-            color: #000;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        #death-screen {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(150, 0, 0, 0.85);
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-        }
-
-        #death-screen h1 {
-            font-size: 38px;
-            color: #fff;
-            text-shadow: 0 0 20px #000;
-            margin-bottom: 20px;
-        }
-
-        #btn-respawn {
-            padding: 14px 28px;
-            background: #ef4444;
-            border: 3px solid #fff;
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-        }
+        #joystick-zone { position: absolute; bottom: 25px; left: 25px; width: 120px; height: 120px; pointer-events: auto; touch-action: none; display: none; }
+        #joystick-base { width: 100%; height: 100%; background: rgba(255,255,255,0.15); border-radius: 50%; position: relative; }
+        #joystick-stick { width: 50px; height: 50px; background: rgba(56,189,248,0.8); border-radius: 50%; position: absolute; top: 35px; left: 35px; }
 
         canvas { display: block; }
     </style>
 </head>
 <body>
 
-    <!-- LOBİ VE CİHAZ / MULTIPLAYER SEÇİM EKRANI -->
+    <!-- LOBİ EKRANI -->
     <div id="auth-screen">
         <div class="auth-card">
-            <h1>Pixel Survival RPG</h1>
+            <h1>Yuvarlak & Fotoğraflı RPG</h1>
             
             <div class="input-group">
                 <label>Karakter Adı</label>
@@ -436,862 +58,328 @@
             </div>
 
             <div class="input-group">
-                <label>Cihaz / Kontrol Tipi</label>
+                <label>Karakter Fotoğrafı (İsteğe Bağlı)</label>
+                <div class="photo-upload-area">
+                    <img id="photo-preview" class="photo-preview" src="">
+                    <input type="file" id="photo-input" accept="image/*" style="display:none;" onchange="handlePhotoUpload(event)">
+                    <button class="btn-upload" onclick="document.getElementById('photo-input').click()">Fotoğraf Seç</button>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Cihaz Tipi</label>
                 <select id="control-type-select">
-                    <option value="pc">💻 Bilgisayar (WASD + Mouse)</option>
+                    <option value="pc">💻 Bilgisayar (Yön Tuşları/WASD)</option>
                     <option value="mobile">📱 Mobil (Dokunmatik Joystick)</option>
                 </select>
             </div>
 
             <div class="input-group">
-                <label>Çevrimiçi Mod (Multiplayer)</label>
+                <label>Multiplayer (Çevrimiçi Mod)</label>
                 <select id="mp-mode-select" onchange="toggleRoomInput()">
-                    <option value="single">👤 Tek Oyunculu (Solo)</option>
-                    <option value="host">🌐 Oda Kur (Host)</option>
-                    <option value="join">🔗 Odaya Katıl (Client)</option>
+                    <option value="single">👤 Tek Oyunculu</option>
+                    <option value="host">🌐 Oda Kur (Arkadaşlarını Davet Et)</option>
+                    <option value="join">🔗 Odaya Katıl</option>
                 </select>
             </div>
 
             <div class="input-group" id="room-code-group" style="display: none;">
                 <label id="room-label">Oda Kodu</label>
-                <input type="text" id="room-input" placeholder="Oda Kodunu Girin">
+                <input type="text" id="room-input" placeholder="Arkadaşının verdiği kodu gir">
             </div>
 
-            <button class="btn-start" onclick="initGameAndConnect()">Dünyaya Gir</button>
+            <button class="btn-start" onclick="startGame()">Dünyaya Gir</button>
         </div>
     </div>
 
     <!-- OYUN HUD -->
     <div id="game-ui">
+        <div id="room-info-badge">Oda Kodu: <span id="display-room-code" style="color: #fff;">Bekleniyor...</span></div>
         <div id="player-hud">
-            <div class="hud-title">
-                <span id="hud-player-name">Oyuncu</span>
-                <span id="hud-player-lvl" style="color: #38bdf8;">Lvl 1</span>
-            </div>
+            <div class="hud-title"><span id="hud-name">Oyuncu</span></div>
             <div class="bar-container">
                 <div class="bar-fill-hp" id="hp-bar-fill"></div>
                 <div class="bar-text" id="hp-bar-text">100 / 100 CAN</div>
             </div>
-            <div class="bar-container">
-                <div class="bar-fill-xp" id="xp-bar-fill"></div>
-                <div class="bar-text" id="xp-bar-text">0 / 10 XP</div>
-            </div>
-        </div>
-
-        <div id="btn-inventory-toggle" onclick="toggleModal('inventory-modal')">🎒</div>
-
-        <div id="top-right-hud">
-            <!-- Oyun İçi Cihaz Kontrol Değiştirme Tuşu -->
-            <div class="hud-btn" id="btn-platform-switch" onclick="switchPlatformMode()">
-                🎮 Mod: <span id="current-platform-text">PC</span>
-            </div>
-            <div class="hud-btn" onclick="toggleModal('stat-modal')">
-                📊 Statlar <div class="badge" id="stat-badge" style="display:none;">0</div>
-            </div>
-            <div class="hud-btn" style="border-color: #f59e0b;">
-                🪙 <span id="gold-text">0</span>
-            </div>
-        </div>
-
-        <div id="hotbar">
-            <div class="hot-slot selected" onclick="selectHotSlot(0)"><span class="slot-num">1</span>🗡️</div>
-            <div class="hot-slot" onclick="selectHotSlot(1)"><span class="slot-num">2</span>🏹</div>
-            <div class="hot-slot" onclick="selectHotSlot(2)"><span class="slot-num">3</span></div>
-            <div class="hot-slot" onclick="selectHotSlot(3)"><span class="slot-num">4</span></div>
-            <div class="hot-slot" onclick="selectHotSlot(4)"><span class="slot-num">5</span></div>
         </div>
 
         <div id="joystick-zone">
-            <div id="joystick-base">
-                <div id="joystick-stick"></div>
-            </div>
+            <div id="joystick-base"><div id="joystick-stick"></div></div>
         </div>
-    </div>
-
-    <!-- MODAL: 27 SLOT ENVANTER -->
-    <div class="modal" id="inventory-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>🎒 Sırt Çantası (27 Slot)</h2>
-                <span class="close-btn" onclick="toggleModal('inventory-modal')">✕</span>
-            </div>
-            <div class="inv-grid" id="inv-grid-container"></div>
-        </div>
-    </div>
-
-    <!-- MODAL: STATLAR -->
-    <div class="modal" id="stat-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>📊 Karakter Geliştirme</h2>
-                <span class="close-btn" onclick="toggleModal('stat-modal')">✕</span>
-            </div>
-            <p style="font-size: 11px; color: #38bdf8; margin-bottom: 12px;">Puanlar: <span id="available-stat-pts">0</span></p>
-            <div class="stat-row">
-                <div><strong>💪 Saldırı Gücü (+5)</strong><br><small style="color:#94a3b8">Mevcut: <span id="stat-atk-val">25</span></small></div>
-                <button class="stat-btn" id="btn-add-atk" onclick="addStat('atk')">+ Yükselt</button>
-            </div>
-            <div class="stat-row">
-                <div><strong>🛡️ Defans (+8)</strong><br><small style="color:#94a3b8">Mevcut: <span id="stat-def-val">0</span></small></div>
-                <button class="stat-btn" id="btn-add-def" onclick="addStat('def')">+ Yükselt</button>
-            </div>
-            <div class="stat-row">
-                <div><strong>❤️ Can (+10 Max)</strong><br><small style="color:#94a3b8">Mevcut: <span id="stat-hp-val">100</span></small></div>
-                <button class="stat-btn" id="btn-add-hp" onclick="addStat('hp')">+ Yükselt</button>
-            </div>
-            <div class="stat-row">
-                <div><strong>🍀 Ganimet (+15%)</strong><br><small style="color:#94a3b8">Mevcut: x<span id="stat-loot-val">1.0</span></small></div>
-                <button class="stat-btn" id="btn-add-loot" onclick="addStat('loot')">+ Yükselt</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL: NPC SHOP -->
-    <div class="modal" id="npc-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="npc-modal-title">Tüccar</h2>
-                <span class="close-btn" onclick="toggleModal('npc-modal')">✕</span>
-            </div>
-            <div id="npc-modal-body"></div>
-        </div>
-    </div>
-
-    <!-- ÖLÜM EKRANI -->
-    <div id="death-screen">
-        <h1>💀 ÖLDÜN!</h1>
-        <button id="btn-respawn" onclick="respawnPlayer()">Yeniden Doğ</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>
 
     <script>
-        // CANVA VE HARİTA BOYUTLARI (ÇOK UZUN MAP: 16000px YÜKSEKLİK)
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const WORLD = { width: 5000, height: 16000 };
+        const WORLD = { width: 4000, height: 4000 };
 
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize); resize();
 
-        // AUDIO SYNTHESIZER
-        let audioCtx = null;
-        function initAudio() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-
-        function playSound(type) {
-            if (!audioCtx) return;
-            try {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                const now = audioCtx.currentTime;
-
-                if (type === 'walk') {
-                    osc.type = 'triangle'; osc.frequency.setValueAtTime(120, now);
-                    gain.gain.setValueAtTime(0.04, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
-                    osc.start(now); osc.stop(now + 0.08);
-                } else if (type === 'attack') {
-                    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(400, now);
-                    osc.frequency.exponentialRampToValueAtTime(80, now + 0.15);
-                    gain.gain.setValueAtTime(0.12, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-                    osc.start(now); osc.stop(now + 0.15);
-                } else if (type === 'hit') {
-                    osc.type = 'square'; osc.frequency.setValueAtTime(150, now);
-                    gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
-                    osc.start(now); osc.stop(now + 0.12);
-                } else if (type === 'pickup') {
-                    osc.type = 'sine'; osc.frequency.setValueAtTime(523, now); osc.frequency.setValueAtTime(659, now + 0.08);
-                    gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-                    osc.start(now); osc.stop(now + 0.2);
-                } else if (type === 'levelup') {
-                    osc.type = 'square'; osc.frequency.setValueAtTime(440, now); osc.frequency.setValueAtTime(659, now + 0.15);
-                    gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
-                    osc.start(now); osc.stop(now + 0.35);
-                }
-            } catch(e) {}
-        }
-
-        // KARAKTER DURUMU
+        let playerPhotoBase64 = null;
         let isMobileMode = false;
+
+        // OYUNCU DURUMU
         let player = {
             id: Math.random().toString(36).substring(2, 9),
-            x: 2500,
-            y: 14000,
-            radius: 24,
-            speed: 6.0, // Karakter hızlı
             name: "Oyuncu",
-            level: 1,
-            xp: 0, maxXp: 10,
+            photo: null,
+            x: 2000, y: 2000,
+            radius: 30, // Top boyutu
+            speed: 5,
             hp: 100, maxHp: 100,
-            atk: 25, def: 0, lootMult: 1.0,
-            statPoints: 0, gold: 0,
-            selectedSlot: 0, angle: 0,
-            hasBow: false,
-            inventory: new Array(27).fill(null),
-            isAttacking: false, attackTimer: 0
+            color: "#38bdf8"
         };
 
-        // DİĞER ONLİNE OYUNCULAR (MULTIPLAYER)
-        const remotePlayers = {};
+        // MULTIPLAYER SİSTEMİ (EN BAŞTAN DÜZGÜN YAZILMIŞ)
         let peer = null;
-        let peerConnections = [];
+        let connections = []; // Host için
+        let hostConnection = null; // Client için
+        let remotePlayers = {}; // Diğer oyuncular
+        let isHost = false;
 
-        // MOB TİPLERİ VE BÖLGELERİ
-        const MOB_SPECS = {
-            RABBIT: { name: "Tavşan", level: 2, xp: 4, radius: 16, color: "#f8fafc", zoneMinY: 11200, zoneMaxY: 15800, max: 20, hp: 30, drop: { id: "rabbit_foot", name: "Tavşan Ayağı", icon: "🐇", val: 15 } },
-            COW: { name: "İnek", level: 4, xp: 8, radius: 26, color: "#e2e8f0", zoneMinY: 11200, zoneMaxY: 15800, max: 10, hp: 60, drop: { id: "cow_meat", name: "İnek Eti", icon: "🥩", val: 30 } },
-            WILD_BOAR: { name: "Yaban Domuzu", minLvl: 30, maxLvl: 40, radius: 22, color: "#b45309", zoneMinY: 6700, zoneMaxY: 10800, max: 15, drop: { id: "boar_hide", name: "Domuz Derisi", icon: "🐗", val: 75 } },
-            AGGRESSIVE_BOAR: { name: "Agresif Domuz", minLvl: 50, maxLvl: 60, radius: 24, color: "#78350f", zoneMinY: 6700, zoneMaxY: 10800, max: 10, drop: { id: "sharp_tooth", name: "Sivri Diş", icon: "🦷", val: 120 } },
-            SKELETON: { name: "İskelet", minLvl: 80, maxLvl: 120, radius: 21, color: "#cbd5e1", zoneMinY: 2700, zoneMaxY: 6300, max: 12, drop: { id: "bone", name: "Kemik", icon: "🦴", val: 250 } },
-            ZOMBIE: { name: "Zombi", level: 150, xp: 300, radius: 26, color: "#15803d", zoneMinY: 2700, zoneMaxY: 6300, max: 8, hp: 1200, drop: { id: "brain", name: "Zombi Beyni", icon: "🧠", val: 500 } }
-        };
-
-        const mobs = [];
-        const droppedLoot = [];
-        const projectiles = [];
-
-        // BOSS (SİYAH ÇUBUK ADAM - 40,000 CAN)
-        let boss = {
-            id: "boss_stickman",
-            name: "Siyah Çubuk Boss",
-            level: 500,
-            hp: 40000,
-            maxHp: 40000,
-            radius: 40,
-            x: 2500,
-            y: 1200,
-            attackTimer: 0,
-            isAlive: true
-        };
-
-        // NPC'LER (Wiron Dede & Maşallah Dayı)
-        const npcs = [
-            { id: "wiron", name: "Wiron Dede", x: 3800, y: 13500, icon: "👴" },
-            { id: "masallah", name: "Maşallah Dayı", x: 3800, y: 14300, icon: "👳" }
-        ];
-
-        function spawnMob(typeKey) {
-            const spec = MOB_SPECS[typeKey];
-            let lvl = spec.level || (Math.floor(Math.random() * (spec.maxLvl - spec.minLvl + 1)) + spec.minLvl);
-            let xpGained = spec.xp || (lvl * 2);
-            let maxHp = spec.hp || (lvl * 15);
-
-            mobs.push({
-                id: Math.random().toString(36).substr(2, 9),
-                typeKey: typeKey,
-                name: spec.name,
-                level: lvl,
-                xpValue: xpGained,
-                radius: spec.radius,
-                color: spec.color,
-                x: Math.random() * (WORLD.width - 400) + 200,
-                y: Math.random() * (spec.zoneMaxY - spec.zoneMinY) + spec.zoneMinY,
-                hp: maxHp,
-                maxHp: maxHp,
-                isAggro: false,
-                drop: spec.drop
-            });
+        // FOTOĞRAF YÜKLEME VE KÜÇÜLTME (Kasmasın diye 64x64 yapıyoruz)
+        function handlePhotoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = 64; tempCanvas.height = 64;
+                    const tCtx = tempCanvas.getContext('2d');
+                    
+                    const size = Math.min(img.width, img.height);
+                    const sx = (img.width - size) / 2;
+                    const sy = (img.height - size) / 2;
+                    tCtx.drawImage(img, sx, sy, size, size, 0, 0, 64, 64);
+                    
+                    playerPhotoBase64 = tempCanvas.toDataURL('image/jpeg', 0.8);
+                    document.getElementById('photo-preview').src = playerPhotoBase64;
+                    player.photo = playerPhotoBase64;
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
         }
 
-        function initMobs() {
-            mobs.length = 0;
-            for (let i = 0; i < MOB_SPECS.RABBIT.max; i++) spawnMob('RABBIT');
-            for (let i = 0; i < MOB_SPECS.COW.max; i++) spawnMob('COW');
-            for (let i = 0; i < MOB_SPECS.WILD_BOAR.max; i++) spawnMob('WILD_BOAR');
-            for (let i = 0; i < MOB_SPECS.AGGRESSIVE_BOAR.max; i++) spawnMob('AGGRESSIVE_BOAR');
-            for (let i = 0; i < MOB_SPECS.SKELETON.max; i++) spawnMob('SKELETON');
-            for (let i = 0; i < MOB_SPECS.ZOMBIE.max; i++) spawnMob('ZOMBIE');
-        }
-
-        // KONTROLLER (KLAVYE / JOYSTICK / SWITCH)
-        const keys = {};
-        window.addEventListener('keydown', e => {
-            initAudio();
-            keys[e.key.toLowerCase()] = true;
-            if (['1','2','3','4','5'].includes(e.key)) selectHotSlot(parseInt(e.key) - 1);
-        });
-        window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
-
+        // ARAYÜZ KONTROLLERİ
         function toggleRoomInput() {
             const mode = document.getElementById('mp-mode-select').value;
             const group = document.getElementById('room-code-group');
-            const label = document.getElementById('room-label');
-
             if (mode === 'join') {
                 group.style.display = 'block';
-                label.innerText = 'Katılınacak Oda Kodu:';
-            } else if (mode === 'host') {
-                group.style.display = 'block';
-                label.innerText = 'Oda Kodunuz (İsteğe Bağlı):';
             } else {
                 group.style.display = 'none';
             }
         }
 
-        function switchPlatformMode() {
-            isMobileMode = !isMobileMode;
-            document.getElementById('joystick-zone').style.display = isMobileMode ? 'block' : 'none';
-            document.getElementById('current-platform-text').innerText = isMobileMode ? 'MOBİL' : 'PC';
-        }
+        // KONTROLLER (Klavye & Joystick)
+        const keys = {};
+        window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+        window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
-        // JOYSTICK
-        const joystickZone = document.getElementById('joystick-zone');
-        const joystickStick = document.getElementById('joystick-stick');
+        const joyZone = document.getElementById('joystick-zone');
+        const joyStick = document.getElementById('joystick-stick');
         let joyVector = { x: 0, y: 0 };
         let joyActive = false;
 
         function handleJoystick(clientX, clientY) {
-            const rect = joystickZone.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-            let deltaX = clientX - centerX;
-            let deltaY = clientY - centerY;
-            const dist = Math.hypot(deltaX, deltaY);
-            const maxDist = 40;
-
-            if (dist > maxDist) {
-                deltaX = (deltaX / dist) * maxDist;
-                deltaY = (deltaY / dist) * maxDist;
-            }
-
-            joystickStick.style.left = `${33 + deltaX}px`;
-            joystickStick.style.top = `${33 + deltaY}px`;
-            joyVector.x = deltaX / maxDist;
-            joyVector.y = deltaY / maxDist;
+            const rect = joyZone.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+            let dx = clientX - cx, dy = clientY - cy;
+            const dist = Math.hypot(dx, dy);
+            if (dist > 40) { dx = (dx/dist)*40; dy = (dy/dist)*40; }
+            joyStick.style.left = `${35 + dx}px`; joyStick.style.top = `${35 + dy}px`;
+            joyVector.x = dx / 40; joyVector.y = dy / 40;
         }
 
-        joystickZone.addEventListener('pointerdown', e => {
-            initAudio(); joyActive = true; joystickZone.setPointerCapture(e.pointerId);
-            handleJoystick(e.clientX, e.clientY);
-        });
-        joystickZone.addEventListener('pointermove', e => { if (joyActive) handleJoystick(e.clientX, e.clientY); });
-        function resetJoy() {
-            joyActive = false; joyVector = { x: 0, y: 0 };
-            joystickStick.style.left = '33px'; joystickStick.style.top = '33px';
-        }
-        joystickZone.addEventListener('pointerup', resetJoy);
-        joystickZone.addEventListener('pointercancel', resetJoy);
+        joyZone.addEventListener('pointerdown', e => { joyActive = true; joyZone.setPointerCapture(e.pointerId); handleJoystick(e.clientX, e.clientY); });
+        joyZone.addEventListener('pointermove', e => { if(joyActive) handleJoystick(e.clientX, e.clientY); });
+        function resetJoy() { joyActive = false; joyVector = {x:0,y:0}; joyStick.style.left = '35px'; joyStick.style.top = '35px'; }
+        joyZone.addEventListener('pointerup', resetJoy); joyZone.addEventListener('pointercancel', resetJoy);
 
-        // SALDIRI VE DOKUNMA/TIKLAMA
-        window.addEventListener('pointerdown', e => {
-            if (e.target.tagName !== 'CANVAS') return;
-            initAudio();
-
-            const clickX = e.clientX + (player.x - canvas.width / 2);
-            const clickY = e.clientY + (player.y - canvas.height / 2);
-
-            // NPC Etkileşimi
-            for (let npc of npcs) {
-                if (Math.hypot(npc.x - clickX, npc.y - clickY) < 60) {
-                    openNPCShop(npc.id);
-                    return;
-                }
-            }
-
-            player.isAttacking = true;
-            player.attackTimer = 10;
-            player.angle = Math.atan2(clickY - player.y, clickX - player.x);
-            playSound('attack');
-
-            if (player.selectedSlot === 1 && player.hasBow) {
-                projectiles.push({
-                    x: player.x, y: player.y,
-                    vx: Math.cos(player.angle) * 12, vy: Math.sin(player.angle) * 12,
-                    damage: player.atk, isPlayer: true, life: 60
-                });
-                return;
-            }
-
-            if (player.selectedSlot === 0) {
-                mobs.forEach(mob => {
-                    if (Math.hypot(mob.x - player.x, mob.y - player.y) < 110) applyDamageToMob(mob, player.atk);
-                });
-                if (boss.isAlive && Math.hypot(boss.x - player.x, boss.y - player.y) < 130) {
-                    boss.hp -= player.atk;
-                    playSound('hit');
-                    if (boss.hp <= 0) {
-                        boss.isAlive = false;
-                        gainXP(10000);
-                        droppedLoot.push({ id: "legendary_crystal", name: "Efsanevi Kristal", icon: "💎", val: 5000, x: boss.x, y: boss.y });
-                    }
-                }
-            }
-        });
-
-        function applyDamageToMob(mob, damage) {
-            mob.hp -= damage;
-            mob.isAggro = true;
-            playSound('hit');
-
-            if (mob.hp <= 0) {
-                gainXP(mob.xpValue);
-                if (mob.drop) {
-                    droppedLoot.push({
-                        id: mob.drop.id, name: mob.drop.name, icon: mob.drop.icon,
-                        val: Math.floor(mob.drop.val * player.lootMult),
-                        x: mob.x, y: mob.y
-                    });
-                }
-                const typeKey = mob.typeKey;
-                const idx = mobs.indexOf(mob);
-                if (idx > -1) mobs.splice(idx, 1);
-                setTimeout(() => spawnMob(typeKey), 10000);
-            }
-        }
-
-        function gainXP(amount) {
-            player.xp += amount;
-            while (player.xp >= player.maxXp) {
-                player.xp -= player.maxXp;
-                player.level++;
-                player.statPoints++;
-                player.maxXp = player.level * 12;
-                playSound('levelup');
-            }
-            updateUI();
-        }
-
-        function addItemToInventory(item) {
-            for (let i = 0; i < 27; i++) {
-                if (player.inventory[i] && player.inventory[i].id === item.id) {
-                    player.inventory[i].count++;
-                    return true;
-                }
-            }
-            for (let i = 0; i < 27; i++) {
-                if (!player.inventory[i]) {
-                    player.inventory[i] = { ...item, count: 1 };
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        function addStat(type) {
-            if (player.statPoints <= 0) return;
-            player.statPoints--;
-            if (type === 'atk') player.atk += 5;
-            if (type === 'def') player.def += 8;
-            if (type === 'hp') { player.maxHp += 10; player.hp += 10; }
-            if (type === 'loot') player.lootMult = parseFloat((player.lootMult + 0.15).toFixed(2));
-            updateUI();
-            updateStatModalUI();
-        }
-
-        function updateStatModalUI() {
-            document.getElementById('available-stat-pts').innerText = player.statPoints;
-            document.getElementById('stat-atk-val').innerText = player.atk;
-            document.getElementById('stat-def-val').innerText = player.def;
-            document.getElementById('stat-hp-val').innerText = player.maxHp;
-            document.getElementById('stat-loot-val').innerText = player.lootMult;
-
-            const disable = player.statPoints <= 0;
-            document.getElementById('btn-add-atk').disabled = disable;
-            document.getElementById('btn-add-def').disabled = disable;
-            document.getElementById('btn-add-hp').disabled = disable;
-            document.getElementById('btn-add-loot').disabled = disable;
-        }
-
-        function openNPCShop(npcId) {
-            const modal = document.getElementById('npc-modal');
-            const title = document.getElementById('npc-modal-title');
-            const body = document.getElementById('npc-modal-body');
-
-            if (npcId === 'wiron') {
-                title.innerText = "👴 Wiron Dede (Ganimet Tüccarı)";
-                let totalValue = 0;
-                player.inventory.forEach(item => { if (item) totalValue += item.val * item.count; });
-
-                body.innerHTML = `
-                    <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 12px;">"Hoş geldin evladım. Canavarlardan düşenleri satıp altın kazanabilirsin."</p>
-                    <div class="shop-item">
-                        <div><strong>💰 Tüm Ganimetleri Sat</strong><br><small style="color: #22c55e">Toplam: ${totalValue} Altın</small></div>
-                        <button class="shop-btn" onclick="sellAllLoot()">Hepsini Sat</button>
-                    </div>
-                `;
-            } else if (npcId === 'masallah') {
-                title.innerText = "👳 Maşallah Dayı (Demirci)";
-                body.innerHTML = `
-                    <div class="shop-item">
-                        <div><strong>🗡️ Kılıç Geliştir (+15 Hasar)</strong><br><small style="color: #f59e0b">100 Altın</small></div>
-                        <button class="shop-btn" onclick="buyUpgrade('sword')">Satın Al</button>
-                    </div>
-                    <div class="shop-item">
-                        <div><strong>🛡️ Çelik Zırh (+20 Defans)</strong><br><small style="color: #f59e0b">150 Altın</small></div>
-                        <button class="shop-btn" onclick="buyUpgrade('armor')">Satın Al</button>
-                    </div>
-                    <div class="shop-item">
-                        <div><strong>🏹 Uzun Yay (Menzilli Saldırı)</strong><br><small style="color: #f59e0b">300 Altın</small></div>
-                        <button class="shop-btn" onclick="buyUpgrade('bow')">Satın Al</button>
-                    </div>
-                `;
-            }
-            toggleModal('npc-modal', true);
-        }
-
-        function sellAllLoot() {
-            let total = 0;
-            for (let i = 0; i < 27; i++) {
-                if (player.inventory[i]) {
-                    total += player.inventory[i].val * player.inventory[i].count;
-                    player.inventory[i] = null;
-                }
-            }
-            player.gold += total;
-            playSound('pickup');
-            updateUI();
-            toggleModal('npc-modal', false);
-        }
-
-        function buyUpgrade(type) {
-            if (type === 'sword' && player.gold >= 100) { player.gold -= 100; player.atk += 15; playSound('pickup'); }
-            else if (type === 'armor' && player.gold >= 150) { player.gold -= 150; player.def += 20; playSound('pickup'); }
-            else if (type === 'bow' && player.gold >= 300) { player.gold -= 300; player.hasBow = true; playSound('pickup'); }
-            updateUI();
-            toggleModal('npc-modal', false);
-        }
-
-        function toggleModal(id, forceState) {
-            const el = document.getElementById(id);
-            el.style.display = (forceState !== undefined) ? (forceState ? 'flex' : 'none') : ((el.style.display === 'flex') ? 'none' : 'flex');
-            if (id === 'inventory-modal' && el.style.display === 'flex') renderInventoryGrid();
-            if (id === 'stat-modal' && el.style.display === 'flex') updateStatModalUI();
-        }
-
-        function renderInventoryGrid() {
-            const container = document.getElementById('inv-grid-container');
-            container.innerHTML = '';
-            for (let i = 0; i < 27; i++) {
-                const item = player.inventory[i];
-                const slotDiv = document.createElement('div');
-                slotDiv.className = 'inv-slot';
-                if (item) slotDiv.innerHTML = `${item.icon} <span class="inv-count">${item.count}</span>`;
-                container.appendChild(slotDiv);
-            }
-        }
-
-        function selectHotSlot(idx) {
-            player.selectedSlot = idx;
-            document.querySelectorAll('.hot-slot').forEach((el, i) => el.classList.toggle('selected', i === idx));
-        }
-
-        function updateUI() {
-            document.getElementById('hud-player-name').innerText = player.name;
-            document.getElementById('hud-player-lvl').innerText = `Lvl ${player.level}`;
-            document.getElementById('hp-bar-fill').style.width = `${Math.max(0, (player.hp / player.maxHp) * 100)}%`;
-            document.getElementById('hp-bar-text').innerText = `${Math.ceil(player.hp)} / ${player.maxHp} CAN`;
-            document.getElementById('xp-bar-fill').style.width = `${Math.min(100, (player.xp / player.maxXp) * 100)}%`;
-            document.getElementById('xp-bar-text').innerText = `${player.xp} / ${player.maxXp} XP`;
-            document.getElementById('gold-text').innerText = player.gold;
-
-            const badge = document.getElementById('stat-badge');
-            if (player.statPoints > 0) { badge.innerText = player.statPoints; badge.style.display = 'flex'; }
-            else badge.style.display = 'none';
-        }
-
-        function takeDamage(dmg) {
-            let actualDmg = Math.max(1, dmg - player.def);
-            player.hp -= actualDmg;
-            playSound('hit');
-            updateUI();
-            if (player.hp <= 0) {
-                player.hp = 0;
-                document.getElementById('death-screen').style.display = 'flex';
-            }
-        }
-
-        function respawnPlayer() {
-            player.hp = player.maxHp;
-            player.x = 2500;
-            player.y = 14000;
-            document.getElementById('death-screen').style.display = 'none';
-            updateUI();
-        }
-
-        // GERÇEK ZAMANLI MULTIPLAYER YÖNETİMİ (PEERJS)
-        function initMultiplayer(mpMode, customRoom) {
-            if (mpMode === 'single') return;
-
-            const peerId = (mpMode === 'host' && customRoom) ? customRoom : 'pxrpg-' + Math.random().toString(36).substr(2, 6);
-            peer = new Peer(peerId);
-
-            peer.on('open', id => {
-                console.log('Oda Peer ID:', id);
-                if (mpMode === 'host') alert(`Oda Oluşturuldu! Arkadaşının Katılacağı Oda Kodu: ${id}`);
-            });
-
-            if (mpMode === 'join') {
-                const conn = peer.connect(customRoom);
-                setupPeerConn(conn);
-            }
-
-            peer.on('connection', conn => {
-                setupPeerConn(conn);
-            });
-        }
-
-        function setupPeerConn(conn) {
-            peerConnections.push(conn);
-            conn.on('data', data => {
-                if (data.type === 'state') {
-                    remotePlayers[data.player.id] = data.player;
-                }
-            });
-        }
-
-        function syncMultiplayerState() {
-            if (peerConnections.length === 0) return;
-            const data = {
-                type: 'state',
-                player: { id: player.id, name: player.name, level: player.level, x: player.x, y: player.y, angle: player.angle, hp: player.hp, maxHp: player.maxHp }
-            };
-            peerConnections.forEach(conn => { if (conn.open) conn.send(data); });
-        }
-
-        function initGameAndConnect() {
-            const name = document.getElementById('username-input').value.trim();
-            if (name) player.name = name;
-
-            const selectedPlatform = document.getElementById('control-type-select').value;
-            isMobileMode = (selectedPlatform === 'mobile');
-            document.getElementById('joystick-zone').style.display = isMobileMode ? 'block' : 'none';
-            document.getElementById('current-platform-text').innerText = isMobileMode ? 'MOBİL' : 'PC';
-
-            const mpMode = document.getElementById('mp-mode-select').value;
-            const roomCode = document.getElementById('room-input').value.trim();
+        // OYUN BAŞLATMA VE PEERJS BAĞLANTISI
+        function startGame() {
+            player.name = document.getElementById('username-input').value.trim() || "Oyuncu";
+            isMobileMode = (document.getElementById('control-type-select').value === 'mobile');
+            const mode = document.getElementById('mp-mode-select').value;
+            const joinCode = document.getElementById('room-input').value.trim();
 
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('game-ui').style.display = 'block';
+            if (isMobileMode) document.getElementById('joystick-zone').style.display = 'block';
+            document.getElementById('hud-name').innerText = player.name;
 
-            initAudio();
-            initMobs();
-            initMultiplayer(mpMode, roomCode);
-            updateUI();
+            if (mode === 'host') {
+                isHost = true;
+                const roomCode = Math.floor(1000 + Math.random() * 9000).toString(); // Örn: 4821
+                
+                // Host PeerJS başlat
+                peer = new Peer('pxrpg-' + roomCode);
+                
+                peer.on('open', id => {
+                    document.getElementById('room-info-badge').style.display = 'block';
+                    document.getElementById('display-room-code').innerText = roomCode;
+                });
+
+                peer.on('connection', conn => {
+                    connections.push(conn);
+                    conn.on('data', data => {
+                        if (data.type === 'playerUpdate') {
+                            remotePlayers[data.player.id] = data.player; // İstemciden gelen veriyi kaydet
+                        }
+                    });
+                    conn.on('close', () => { delete remotePlayers[conn.peer]; });
+                });
+            } 
+            else if (mode === 'join') {
+                if(!joinCode) { alert("Lütfen kod girin!"); location.reload(); return; }
+                
+                // Client PeerJS başlat
+                peer = new Peer();
+                peer.on('open', id => {
+                    hostConnection = peer.connect('pxrpg-' + joinCode);
+                    
+                    hostConnection.on('open', () => {
+                        document.getElementById('room-info-badge').style.display = 'block';
+                        document.getElementById('display-room-code').innerText = "Bağlandı: " + joinCode;
+                        document.getElementById('display-room-code').style.color = "#22c55e";
+                    });
+
+                    hostConnection.on('data', data => {
+                        if (data.type === 'hostSync') {
+                            remotePlayers = data.players; // Host tüm haritayı gönderir
+                        }
+                    });
+                });
+            }
+
             requestAnimationFrame(gameLoop);
+            setInterval(syncMultiplayer, 1000 / 20); // Saniyede 20 kez veri yolla
         }
 
-        // OYUN GÜNCELLEMESİ
-        let walkTimer = 0;
-        function updateGame() {
-            if (player.hp <= 0) return;
+        // MULTIPLAYER VERİ SENKRONİZASYONU
+        function syncMultiplayer() {
+            if (isHost) {
+                // Host, kendi oyuncusunu remote listesine eklemeden tüm listeyi client'lara atar
+                let allPlayers = { ...remotePlayers };
+                allPlayers[player.id] = player; // Host'un kendisi
+                
+                connections.forEach(conn => {
+                    if (conn.open) {
+                        // Sadece o client'ın verisini listeden çıkararak gönder (kendini çift görmesin)
+                        let syncData = { ...allPlayers };
+                        delete syncData[conn.peer]; 
+                        conn.send({ type: 'hostSync', players: syncData });
+                    }
+                });
+            } else if (hostConnection && hostConnection.open) {
+                // Client, sadece kendi durumunu Host'a bildirir
+                hostConnection.send({ type: 'playerUpdate', player: player });
+            }
+        }
 
+        // FOTOĞRAF CACHE SİSTEMİ (Oyun içinde resimlerin yüklenmesi için)
+        const imageCache = {};
+        function drawAvatarBall(ctx, p, x, y) {
+            ctx.save();
+            ctx.translate(x, y);
+
+            // Yuvarlak Top (Kırpma Alanı)
+            ctx.beginPath();
+            ctx.arc(0, 0, p.radius, 0, Math.PI * 2);
+            ctx.closePath();
+            
+            // Eğer oyuncunun fotoğrafı varsa, topun içine çiz
+            if (p.photo) {
+                if (!imageCache[p.id]) {
+                    const img = new Image();
+                    img.src = p.photo;
+                    imageCache[p.id] = img;
+                }
+                
+                ctx.save();
+                ctx.clip(); // Yuvarlak sınır
+                if (imageCache[p.id].complete) {
+                    ctx.drawImage(imageCache[p.id], -p.radius, -p.radius, p.radius * 2, p.radius * 2);
+                }
+                ctx.restore();
+            } else {
+                // Fotoğraf yoksa düz renk yap
+                ctx.fillStyle = p.color;
+                ctx.fill();
+            }
+
+            // Dış Çerçeve Çizgisi
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = (p.id === player.id) ? "#22c55e" : "#e11d48"; // Kendimiz Yeşil, Başkası Kırmızı çerçeve
+            ctx.stroke();
+
+            ctx.restore();
+
+            // İsim Yazısı
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "bold 14px monospace";
+            ctx.textAlign = "center";
+            ctx.fillText(p.name, x, y - p.radius - 8);
+        }
+
+        // OYUN GÜNCELLEME DÖNGÜSÜ
+        function updateGame() {
             let dx = 0, dy = 0;
             if (keys['w'] || keys['arrowup']) dy -= 1;
             if (keys['s'] || keys['arrowdown']) dy += 1;
             if (keys['a'] || keys['arrowleft']) dx -= 1;
             if (keys['d'] || keys['arrowright']) dx += 1;
-
+            
             if (isMobileMode && joyActive) { dx = joyVector.x; dy = joyVector.y; }
 
             if (dx !== 0 || dy !== 0) {
                 const len = Math.hypot(dx, dy) || 1;
                 player.x += (dx / len) * player.speed;
                 player.y += (dy / len) * player.speed;
-                if (!player.isAttacking) player.angle = Math.atan2(dy, dx);
-
-                walkTimer++;
-                if (walkTimer > 18) { playSound('walk'); walkTimer = 0; }
             }
 
+            // Harita sınırları
             player.x = Math.max(player.radius, Math.min(WORLD.width - player.radius, player.x));
             player.y = Math.max(player.radius, Math.min(WORLD.height - player.radius, player.y));
-
-            if (player.attackTimer > 0) player.attackTimer--;
-
-            // Loot Toplama
-            for (let i = droppedLoot.length - 1; i >= 0; i--) {
-                const loot = droppedLoot[i];
-                if (Math.hypot(loot.x - player.x, loot.y - player.y) < player.radius + 20) {
-                    if (addItemToInventory(loot)) { playSound('pickup'); droppedLoot.splice(i, 1); }
-                }
-            }
-
-            // Mermiler
-            for (let i = projectiles.length - 1; i >= 0; i--) {
-                const p = projectiles[i];
-                p.x += p.vx; p.y += p.vy; p.life--;
-
-                if (p.isPlayer) {
-                    mobs.forEach(mob => {
-                        if (Math.hypot(mob.x - p.x, mob.y - p.y) < mob.radius + 10) { applyDamageToMob(mob, p.damage); p.life = 0; }
-                    });
-                    if (boss.isAlive && Math.hypot(boss.x - p.x, boss.y - p.y) < boss.radius + 10) { boss.hp -= p.damage; playSound('hit'); p.life = 0; }
-                } else {
-                    if (Math.hypot(player.x - p.x, player.y - p.y) < player.radius + 15) { takeDamage(p.damage); p.life = 0; }
-                }
-                if (p.life <= 0) projectiles.splice(i, 1);
-            }
-
-            // Mob Yapay Zekası
-            mobs.forEach(mob => {
-                const dist = Math.hypot(player.x - mob.x, player.y - mob.y);
-                if (mob.typeKey === 'AGGRESSIVE_BOAR' || mob.typeKey === 'ZOMBIE' || mob.isAggro) {
-                    if (dist < 400) {
-                        const angle = Math.atan2(player.y - mob.y, player.x - mob.x);
-                        mob.x += Math.cos(angle) * 2.2; mob.y += Math.sin(angle) * 2.2;
-                        if (dist < mob.radius + player.radius) takeDamage(mob.level * 2);
-                    }
-                }
-            });
-
-            // Boss Yapay Zekası
-            if (boss.isAlive) {
-                if (Math.hypot(player.x - boss.x, player.y - boss.y) < 800) {
-                    boss.attackTimer++;
-                    if (boss.attackTimer > 70) {
-                        const angle = Math.atan2(player.y - boss.y, player.x - boss.x);
-                        projectiles.push({ x: boss.x, y: boss.y, vx: Math.cos(angle) * 8, vy: Math.sin(angle) * 8, damage: 45, isPlayer: false, isWall: true, life: 120 });
-                        boss.attackTimer = 0;
-                    }
-                }
-            }
-
-            syncMultiplayerState();
         }
 
-        // BİYOM ÇİZİMİ
-        function drawBackground(camX, camY) {
-            let grad = ctx.createLinearGradient(0, -camY, 0, WORLD.height - camY);
-            grad.addColorStop(0.0, "#f8fafc");  // Beyaz Bölge (Boss)
-            grad.addColorStop(0.2, "#090d16");  // Karanlık Bölge (İskelet/Zombi)
-            grad.addColorStop(0.45, "#d97706"); // Turuncu Bölge (Domuzlar)
-            grad.addColorStop(0.7, "#15803d");  // Yeşil Bölge (Tavşan/İnek)
-            grad.addColorStop(1.0, "#166534");
-
-            ctx.fillStyle = grad;
-            ctx.fillRect(-camX, -camY, WORLD.width, WORLD.height);
-        }
-
-        // PIXEL ART ÇİZİMLERİ
-        function drawPixelRabbit(ctx, x, y) {
-            ctx.fillStyle = "#ffffff"; ctx.fillRect(x - 8, y - 6, 16, 12);
-            ctx.fillRect(x - 6, y - 14, 4, 8); ctx.fillRect(x + 2, y - 14, 4, 8);
-            ctx.fillStyle = "#ef4444"; ctx.fillRect(x + 2, y - 4, 2, 2);
-        }
-
-        function drawPixelCow(ctx, x, y) {
-            ctx.fillStyle = "#f8fafc"; ctx.fillRect(x - 16, y - 12, 32, 24);
-            ctx.fillStyle = "#0f172a"; ctx.fillRect(x - 10, y - 8, 8, 8);
-            ctx.fillStyle = "#f43f5e"; ctx.fillRect(x + 10, y - 4, 8, 8);
-        }
-
-        function drawPixelBoar(ctx, x, y, color) {
-            ctx.fillStyle = color; ctx.fillRect(x - 14, y - 10, 28, 20);
-            ctx.fillStyle = "#f8fafc"; ctx.fillRect(x + 10, y - 2, 6, 4);
-        }
-
-        function drawPixelSkeleton(ctx, x, y) {
-            ctx.fillStyle = "#e2e8f0"; ctx.fillRect(x - 8, y - 12, 16, 10); ctx.fillRect(x - 2, y - 2, 4, 14);
-            ctx.fillStyle = "#000000"; ctx.fillRect(x - 6, y - 10, 3, 3); ctx.fillRect(x + 3, y - 10, 3, 3);
-        }
-
-        function drawPixelZombie(ctx, x, y) {
-            ctx.fillStyle = "#166534"; ctx.fillRect(x - 12, y - 12, 24, 24);
-            ctx.fillStyle = "#ef4444"; ctx.fillRect(x - 6, y - 6, 4, 4); ctx.fillRect(x + 2, y - 6, 4, 4);
-        }
-
-        function drawPixelBoss(ctx, x, y) {
-            ctx.strokeStyle = "#000000"; ctx.lineWidth = 8;
-            ctx.beginPath(); ctx.arc(x, y - 20, 18, 0, Math.PI * 2); ctx.fillStyle = "#000000"; ctx.fill(); ctx.stroke();
-            ctx.fillStyle = "#ef4444"; ctx.fillRect(x - 8, y - 24, 5, 5); ctx.fillRect(x + 3, y - 24, 5, 5);
-            ctx.beginPath(); ctx.moveTo(x, y - 2); ctx.lineTo(x, y + 25); ctx.moveTo(x - 25, y + 8); ctx.lineTo(x + 25, y + 8); ctx.stroke();
-        }
-
-        // RENDER LOOP
+        // ÇİZİM DÖNGÜSÜ
         function gameLoop() {
             updateGame();
 
             const camX = player.x - canvas.width / 2;
             const camY = player.y - canvas.height / 2;
 
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawBackground(camX, camY);
+            // Arka Plan
+            ctx.fillStyle = "#1e293b";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // NPC'ler
-            npcs.forEach(npc => {
-                const sx = npc.x - camX, sy = npc.y - camY;
-                ctx.font = "32px sans-serif"; ctx.textAlign = "center"; ctx.fillText(npc.icon, sx, sy + 10);
-                ctx.fillStyle = "#fbbf24"; ctx.font = "bold 12px monospace"; ctx.fillText(npc.name, sx, sy - 25);
-            });
+            // Izgara (Grid) Çizimi (Hareket hissi için)
+            ctx.strokeStyle = "rgba(255,255,255,0.05)";
+            ctx.lineWidth = 2;
+            const gridSize = 100;
+            const offsetX = -(camX % gridSize);
+            const offsetY = -(camY % gridSize);
+            ctx.beginPath();
+            for (let x = offsetX; x < canvas.width; x += gridSize) { ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); }
+            for (let y = offsetY; y < canvas.height; y += gridSize) { ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); }
+            ctx.stroke();
 
-            // Ganimetler
-            droppedLoot.forEach(loot => {
-                ctx.font = "20px sans-serif"; ctx.fillText(loot.icon, loot.x - camX, loot.y - camY);
-            });
-
-            // Canlılar (Mobs)
-            mobs.forEach(mob => {
-                const sx = mob.x - camX, sy = mob.y - camY;
-                if (sx < -50 || sx > canvas.width + 50 || sy < -50 || sy > canvas.height + 50) return;
-
-                if (mob.typeKey === 'RABBIT') drawPixelRabbit(ctx, sx, sy);
-                else if (mob.typeKey === 'COW') drawPixelCow(ctx, sx, sy);
-                else if (mob.typeKey === 'WILD_BOAR' || mob.typeKey === 'AGGRESSIVE_BOAR') drawPixelBoar(ctx, sx, sy, mob.color);
-                else if (mob.typeKey === 'SKELETON') drawPixelSkeleton(ctx, sx, sy);
-                else if (mob.typeKey === 'ZOMBIE') drawPixelZombie(ctx, sx, sy);
-
-                if (mob.hp < mob.maxHp) {
-                    ctx.fillStyle = "rgba(0,0,0,0.7)"; ctx.fillRect(sx - 20, sy - mob.radius - 14, 40, 6);
-                    ctx.fillStyle = "#ef4444"; ctx.fillRect(sx - 20, sy - mob.radius - 14, 40 * (mob.hp / mob.maxHp), 6);
-                }
-
-                ctx.fillStyle = "#fff"; ctx.font = "bold 10px monospace"; ctx.textAlign = "center";
-                ctx.fillText(`${mob.name} [Lvl ${mob.level}]`, sx, sy - mob.radius - 18);
-            });
-
-            // Boss
-            if (boss.isAlive) {
-                const bsx = boss.x - camX, bsy = boss.y - camY;
-                drawPixelBoss(ctx, bsx, bsy);
-                ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.fillRect(bsx - 50, bsy - 60, 100, 10);
-                ctx.fillStyle = "#a855f7"; ctx.fillRect(bsx - 50, bsy - 60, 100 * (boss.hp / boss.maxHp), 10);
-                ctx.fillStyle = "#fff"; ctx.font = "bold 11px monospace"; ctx.fillText(`${boss.name} (${boss.hp}/40000)`, bsx, bsy - 66);
+            // Diğer Oyuncuları Çiz
+            for (let id in remotePlayers) {
+                const rp = remotePlayers[id];
+                if (rp.id === player.id) continue; // Kendimizi iki kere çizmeyelim
+                drawAvatarBall(ctx, rp, rp.x - camX, rp.y - camY);
             }
 
-            // Mermiler
-            projectiles.forEach(p => {
-                const px = p.x - camX, py = p.y - camY;
-                if (p.isWall) {
-                    ctx.fillStyle = "#64748b"; ctx.fillRect(px - 20, py - 10, 40, 20);
-                } else {
-                    ctx.fillStyle = "#f59e0b"; ctx.beginPath(); ctx.arc(px, py, 4, 0, Math.PI * 2); ctx.fill();
-                }
-            });
-
-            // Diğer Çevrimiçi Oyuncular
-            Object.values(remotePlayers).forEach(rp => {
-                const rsx = rp.x - camX, rsy = rp.y - camY;
-                ctx.beginPath(); ctx.arc(rsx, rsy, 24, 0, Math.PI * 2);
-                ctx.fillStyle = "#e11d48"; ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 3; ctx.stroke();
-                ctx.fillStyle = "#fff"; ctx.font = "bold 11px monospace"; ctx.textAlign = "center";
-                ctx.fillText(`${rp.name} (Lvl ${rp.level})`, rsx, rsy - 34);
-            });
-
-            // Oyuncu
-            const psx = player.x - camX, psy = player.y - camY;
-            ctx.save();
-            ctx.translate(psx, psy);
-            ctx.beginPath(); ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
-            ctx.fillStyle = "#38bdf8"; ctx.fill(); ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 3; ctx.stroke();
-
-            ctx.rotate(player.angle + (player.isAttacking ? 0.4 : 0));
-            if (player.selectedSlot === 0) {
-                ctx.fillStyle = "#d97706"; ctx.fillRect(player.radius - 2, -3, 22, 6);
-            } else if (player.selectedSlot === 1 && player.hasBow) {
-                ctx.strokeStyle = "#78350f"; ctx.lineWidth = 4;
-                ctx.beginPath(); ctx.arc(player.radius, 0, 14, -Math.PI / 2, Math.PI / 2); ctx.stroke();
-            }
-            ctx.restore();
-
-            ctx.fillStyle = "#ffffff"; ctx.font = "bold 12px monospace"; ctx.textAlign = "center";
-            ctx.fillText(`${player.name} (Lvl ${player.level})`, psx, psy - player.radius - 10);
+            // Kendimizi Çiz
+            drawAvatarBall(ctx, player, player.x - camX, player.y - camY);
 
             requestAnimationFrame(gameLoop);
         }
