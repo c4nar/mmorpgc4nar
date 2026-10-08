@@ -2,8 +2,8 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>2D Open World Survival RPG</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>2D Pixel Open World Survival RPG</title>
     <style>
         * {
             box-sizing: border-box;
@@ -11,127 +11,99 @@
             padding: 0;
             user-select: none;
             -webkit-user-select: none;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Courier New', Courier, monospace, sans-serif;
         }
 
         body, html {
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background: #0f172a;
-            color: #f8fafc;
+            background: #000;
+            color: #fff;
         }
 
-        /* GİRİŞ & KARAKTER EKRANI */
+        /* KARAKTER OLUŞTURMA & GİRİŞ */
         #auth-screen {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: 1000;
-            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+            background: linear-gradient(135deg, #0f172a, #1e1b4b);
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
         .auth-card {
-            background: rgba(30, 41, 59, 0.95);
-            border: 2px solid #3b82f6;
-            border-radius: 16px;
-            padding: 28px;
+            background: #1e293b;
+            border: 4px solid #38bdf8;
+            border-radius: 12px;
+            padding: 24px;
             width: 340px;
-            max-width: 90%;
             text-align: center;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-            backdrop-filter: blur(10px);
+            box-shadow: 0 0 30px rgba(56, 189, 248, 0.4);
         }
 
         .auth-card h1 {
-            font-size: 22px;
+            font-size: 20px;
             color: #38bdf8;
-            margin-bottom: 20px;
-            letter-spacing: 1px;
+            margin-bottom: 16px;
+            text-shadow: 2px 2px #000;
         }
 
         .input-group {
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             text-align: left;
         }
 
         .input-group label {
             display: block;
-            font-size: 12px;
+            font-size: 11px;
             color: #94a3b8;
-            margin-bottom: 6px;
-            text-transform: uppercase;
+            margin-bottom: 4px;
             font-weight: bold;
         }
 
         .input-group input[type="text"] {
             width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #475569;
+            padding: 10px;
+            border-radius: 6px;
+            border: 2px solid #475569;
             background: #0f172a;
             color: #fff;
             font-size: 14px;
             text-align: center;
             outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .input-group input[type="text"]:focus {
-            border-color: #38bdf8;
         }
 
         .avatar-picker {
-            width: 100px;
-            height: 100px;
+            width: 90px;
+            height: 90px;
             border-radius: 50%;
             border: 3px dashed #38bdf8;
-            margin: 12px auto;
+            margin: 10px auto;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             cursor: pointer;
             background-size: cover;
             background-position: center;
-            background-repeat: no-repeat;
             background-color: #0f172a;
-            transition: transform 0.2s, border-color 0.2s;
-        }
-
-        .avatar-picker:hover {
-            transform: scale(1.05);
-            border-color: #60a5fa;
-        }
-
-        .avatar-picker span {
-            font-size: 11px;
-            color: #94a3b8;
-            pointer-events: none;
         }
 
         .btn-start {
             width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #22c55e, #16a34a);
-            border: none;
-            border-radius: 8px;
+            padding: 12px;
+            background: #22c55e;
+            border: 3px solid #15803d;
+            border-radius: 6px;
             color: white;
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
             margin-top: 10px;
-            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
-            transition: transform 0.1s, opacity 0.2s;
         }
 
-        .btn-start:active {
-            transform: scale(0.98);
-        }
-
-        /* OYUN HUD & ARAYÜZ */
+        /* OYUN HUD */
         #game-ui {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -140,613 +112,129 @@
             z-index: 100;
         }
 
-        /* EN ÜST LEVEL & XP BARI */
-        #top-bar {
+        /* SOL ÜST CAN & XP */
+        #player-hud {
             position: absolute;
-            top: 16px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 320px;
-            max-width: 90%;
-            background: rgba(15, 23, 42, 0.85);
-            border: 2px solid #334155;
-            border-radius: 20px;
-            padding: 6px;
+            top: 15px;
+            left: 15px;
+            width: 240px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 3px solid #334155;
+            border-radius: 8px;
+            padding: 8px;
             pointer-events: auto;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            backdrop-filter: blur(5px);
         }
 
-        #xp-bar-bg {
+        .hud-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #fbbf24;
+            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .bar-container {
             width: 100%;
-            height: 20px;
+            height: 16px;
             background: #1e293b;
-            border-radius: 12px;
-            overflow: hidden;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            margin-bottom: 6px;
             position: relative;
+            overflow: hidden;
         }
 
-        #xp-bar-fill {
-            width: 0%;
-            height: 100%;
-            background: linear-gradient(90deg, #3b82f6, #60a5fa);
-            border-radius: 12px;
-            transition: width 0.3s ease;
-        }
+        .bar-fill-hp { width: 100%; height: 100%; background: #ef4444; transition: width 0.2s; }
+        .bar-fill-xp { width: 0%; height: 100%; background: #3b82f6; transition: width 0.2s; }
 
-        #xp-text {
+        .bar-text {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 11px;
-            font-weight: 800;
-            color: #ffffff;
-            text-shadow: 1px 1px 3px #000;
+            font-size: 10px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px #000;
         }
 
-        /* 5 SLOTLU ENVANTER */
-        #inventory {
+        /* SOL ORTA ÇANTA BUTONU */
+        #btn-inventory-toggle {
             position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 10px;
-            background: rgba(15, 23, 42, 0.9);
-            padding: 10px 14px;
-            border-radius: 16px;
-            border: 2px solid #334155;
-            pointer-events: auto;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
-            backdrop-filter: blur(5px);
-        }
-
-        .slot {
-            width: 52px;
-            height: 52px;
+            top: 50%;
+            left: 15px;
+            transform: translateY(-50%);
+            width: 54px;
+            height: 54px;
             background: #1e293b;
-            border: 2px solid #475569;
-            border-radius: 10px;
+            border: 3px solid #f59e0b;
+            border-radius: 8px;
             display: flex;
             justify-content: center;
             align-items: center;
-            color: white;
-            font-size: 24px;
-            position: relative;
+            font-size: 26px;
             cursor: pointer;
-            transition: all 0.15s ease;
-        }
-
-        .slot.selected {
-            border-color: #f59e0b;
-            box-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
-            transform: translateY(-4px);
-            background: #283548;
-        }
-
-        .slot-num {
-            position: absolute;
-            top: 2px;
-            left: 5px;
-            font-size: 10px;
-            color: #94a3b8;
-            font-weight: bold;
-        }
-
-        /* DOKUNMATİK ANALOG JOYSTICK */
-        #joystick-zone {
-            position: absolute;
-            bottom: 25px;
-            left: 25px;
-            width: 130px;
-            height: 130px;
             pointer-events: auto;
-            touch-action: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
 
-        #joystick-base {
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.25);
-            border-radius: 50%;
-            position: relative;
-            backdrop-filter: blur(2px);
-        }
-
-        #joystick-stick {
-            width: 50px;
-            height: 50px;
-            background: radial-gradient(circle, #38bdf8, #0284c7);
-            border-radius: 50%;
+        /* SAĞ ÜST STAT / ALTIN BUTONU */
+        #top-right-hud {
             position: absolute;
-            top: 40px;
-            left: 40px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-            transition: transform 0.05s ease-out;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 10px;
+            pointer-events: auto;
         }
 
-        canvas {
-            display: block;
-            width: 100vw;
-            height: 100vh;
-        }
-    </style>
-</head>
-<body>
-
-    <!-- GİRİŞ & KARAKTER OLUŞTURMA -->
-    <div id="auth-screen">
-        <div class="auth-card">
-            <h1>Karakter Oluştur</h1>
-            <div class="input-group">
-                <label>Kullanıcı Adı</label>
-                <input type="text" id="username-input" placeholder="Oyuncu Adı" value="Savaşçı" maxlength="12">
-            </div>
-            
-            <div class="input-group">
-                <label>Top Üstü Fotoğraf (İsteğe Bağlı)</label>
-                <div class="avatar-picker" id="avatar-preview" onclick="document.getElementById('avatar-input').click()">
-                    <span id="avatar-text">📷 Fotoğraf Seç</span>
-                </div>
-                <input type="file" id="avatar-input" accept="image/*" style="display: none;">
-            </div>
-
-            <button class="btn-start" onclick="startGame()">Dünyaya Gir</button>
-        </div>
-    </div>
-
-    <!-- OYUN HUD ARAYÜZÜ -->
-    <div id="game-ui">
-        <!-- XP BARI -->
-        <div id="top-bar">
-            <div id="xp-bar-bg">
-                <div id="xp-bar-fill"></div>
-                <div id="xp-text">0 / 10 XP (Lvl 1)</div>
-            </div>
-        </div>
-
-        <!-- 5 SLOTLU ENVANTER -->
-        <div id="inventory">
-            <div class="slot selected" onclick="selectSlot(0)"><span class="slot-num">1</span>🗡️</div>
-            <div class="slot" onclick="selectSlot(1)"><span class="slot-num">2</span></div>
-            <div class="slot" onclick="selectSlot(2)"><span class="slot-num">3</span></div>
-            <div class="slot" onclick="selectSlot(3)"><span class="slot-num">4</span></div>
-            <div class="slot" onclick="selectSlot(4)"><span class="slot-num">5</span></div>
-        </div>
-
-        <!-- ANALOG JOYSTICK -->
-        <div id="joystick-zone">
-            <div id="joystick-base">
-                <div id="joystick-stick"></div>
-            </div>
-        </div>
-    </div>
-
-    <canvas id="gameCanvas"></canvas>
-
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
-        // FOTOĞRAF YÜKLEME SİSTEMİ
-        let playerImage = null;
-        document.getElementById('avatar-input').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const img = new Image();
-                    img.onload = function() {
-                        playerImage = img;
-                        const preview = document.getElementById('avatar-preview');
-                        preview.style.backgroundImage = `url(${event.target.result})`;
-                        document.getElementById('avatar-text').style.display = 'none';
-                    };
-                    img.src = event.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // DÜNYA VE OYUN STATLARI
-        const WORLD = { width: 4000, height: 4000 };
-        // Y Koordinatı Düzeni:
-        // Y: 2400 - 4000 -> Çimenlik Alan (Aşağı)
-        // Y: 1200 - 2400 -> Turuncu Alan (Orta)
-        // Y: 0 - 1200 -> Karanlık Alan (Yukarı)
-
-        let player = {
-            x: 2000,
-            y: 3200, // Çimenlik alanın ortası
-            radius: 26,
-            speed: 5.5,
-            name: "Oyuncu",
-            level: 1,
-            xp: 0,
-            maxXp: 10,
-            selectedSlot: 0,
-            angle: 0,
-            isAttacking: false,
-            attackTimer: 0
-        };
-
-        // CANLI (MOB) TANIMLARI
-        const MOB_SPECS = {
-            RABBIT: { name: "Tavşan", level: 2, xp: 4, radius: 15, color: "#f8fafc", zone: "grass", max: 20, hp: 20 },
-            COW: { name: "İnek", level: 4, xp: 8, radius: 25, color: "#e2e8f0", spotColor: "#334155", zone: "grass", max: 10, hp: 40 },
-            WILD_BOAR: { name: "Yaban Domuzu", minLvl: 30, maxLvl: 40, radius: 22, color: "#b45309", zone: "orange", max: 15 },
-            AGGRESSIVE_BOAR: { name: "Agresif Domuz", minLvl: 50, maxLvl: 60, radius: 24, color: "#78350f", zone: "orange", max: 10 },
-            SKELETON: { name: "İskelet", minLvl: 80, maxLvl: 120, radius: 20, color: "#cbd5e1", zone: "dark", max: 10 },
-            ZOMBIE: { name: "Zombi", level: 150, xp: 300, radius: 26, color: "#15803d", zone: "dark", max: 8, hp: 1500 }
-        };
-
-        const mobs = [];
-
-        function spawnMob(typeKey) {
-            const spec = MOB_SPECS[typeKey];
-            let lvl = spec.level || (Math.floor(Math.random() * (spec.maxLvl - spec.minLvl + 1)) + spec.minLvl);
-            let xpGained = spec.xp || (lvl * 2); // Her canlı seviyesinin 2 katı XP verir
-            let maxHp = spec.hp || (lvl * 12);
-
-            let minY = 2400, maxY = 3900;
-            if (spec.zone === 'orange') { minY = 1200; maxY = 2300; }
-            if (spec.zone === 'dark') { minY = 100; maxY = 1100; }
-
-            mobs.push({
-                id: Math.random().toString(36).substr(2, 9),
-                typeKey: typeKey,
-                name: spec.name,
-                level: lvl,
-                xpValue: xpGained,
-                radius: spec.radius,
-                color: spec.color,
-                spotColor: spec.spotColor,
-                x: Math.random() * (WORLD.width - 300) + 150,
-                y: Math.random() * (maxY - minY) + minY,
-                hp: maxHp,
-                maxHp: maxHp,
-                vx: (Math.random() - 0.5) * 1.2,
-                vy: (Math.random() - 0.5) * 1.2,
-                moveTimer: 0
-            });
+        .hud-btn {
+            background: #1e293b;
+            border: 3px solid #38bdf8;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            position: relative;
         }
 
-        function initMobs() {
-            for (let i = 0; i < MOB_SPECS.RABBIT.max; i++) spawnMob('RABBIT');
-            for (let i = 0; i < MOB_SPECS.COW.max; i++) spawnMob('COW');
-            for (let i = 0; i < MOB_SPECS.WILD_BOAR.max; i++) spawnMob('WILD_BOAR');
-            for (let i = 0; i < MOB_SPECS.AGGRESSIVE_BOAR.max; i++) spawnMob('AGGRESSIVE_BOAR');
-            for (let i = 0; i < MOB_SPECS.SKELETON.max; i++) spawnMob('SKELETON');
-            for (let i = 0; i < MOB_SPECS.ZOMBIE.max; i++) spawnMob('ZOMBIE');
+        .badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #ef4444;
+            color: #fff;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        // KONTROLLER
-        const keys = {};
-        window.addEventListener('keydown', e => {
-            keys[e.key.toLowerCase()] = true;
-            if (['1','2','3','4','5'].includes(e.key)) {
-                selectSlot(parseInt(e.key) - 1);
-            }
-        });
-        window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
-
-        // JOYSTICK SİSTEMİ
-        const joystickZone = document.getElementById('joystick-zone');
-        const joystickStick = document.getElementById('joystick-stick');
-        let joyVector = { x: 0, y: 0 };
-        let joyActive = false;
-
-        function handleTouch(e) {
-            e.preventDefault();
-            joyActive = true;
-            const touch = e.touches[0];
-            const rect = joystickZone.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-
-            let deltaX = touch.clientX - centerX;
-            let deltaY = touch.clientY - centerY;
-            const dist = Math.hypot(deltaX, deltaY);
-            const maxDist = 40;
-
-            if (dist > maxDist) {
-                deltaX = (deltaX / dist) * maxDist;
-                deltaY = (deltaY / dist) * maxDist;
-            }
-
-            joystickStick.style.left = `${40 + deltaX}px`;
-            joystickStick.style.top = `${40 + deltaY}px`;
-
-            joyVector.x = deltaX / maxDist;
-            joyVector.y = deltaY / maxDist;
+        /* 5 SLOTLU ALT ENVANTER */
+        #hotbar {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            background: rgba(15, 23, 42, 0.9);
+            padding: 8px;
+            border-radius: 10px;
+            border: 3px solid #334155;
+            pointer-events: auto;
         }
 
-        joystickZone.addEventListener('touchstart', handleTouch, { passive: false });
-        joystickZone.addEventListener('touchmove', handleTouch, { passive: false });
-        joystickZone.addEventListener('touchend', () => {
-            joyActive = false;
-            joyVector = { x: 0, y: 0 };
-            joystickStick.style.left = '40px';
-            joystickStick.style.top = '40px';
-        });
-
-        function selectSlot(index) {
-            player.selectedSlot = index;
-            document.querySelectorAll('.slot').forEach((el, i) => {
-                el.classList.toggle('selected', i === index);
-            });
-        }
-
-        // SALDIRI VE HASAR
-        window.addEventListener('pointerdown', (e) => {
-            if (e.target.tagName !== 'CANVAS') return;
-            
-            // Kılıç savurma efekti
-            player.isAttacking = true;
-            player.attackTimer = 10;
-
-            if (player.selectedSlot !== 0) return; // Sadece 1. slotta kılıç var
-
-            const clickWorldX = e.clientX + (player.x - canvas.width / 2);
-            const clickWorldY = e.clientY + (player.y - canvas.height / 2);
-
-            // Açı güncelle
-            player.angle = Math.atan2(clickWorldY - player.y, clickWorldX - player.x);
-
-            // Vuruş menzili içindeki moblara hasar ver
-            for (let i = mobs.length - 1; i >= 0; i--) {
-                const mob = mobs[i];
-                const distToPlayer = Math.hypot(mob.x - player.x, mob.y - player.y);
-                const distToClick = Math.hypot(mob.x - clickWorldX, mob.y - clickWorldY);
-
-                if (distToPlayer < 110 && distToClick < mob.radius + 30) {
-                    let damage = 25 + (player.level * 3);
-                    mob.hp -= damage;
-
-                    if (mob.hp <= 0) {
-                        gainXP(mob.xpValue);
-                        const typeKey = mob.typeKey;
-                        mobs.splice(i, 1);
-                        
-                        // Öldükten 10 saniye sonra geri gel
-                        setTimeout(() => spawnMob(typeKey), 10000);
-                    }
-                    break;
-                }
-            }
-        });
-
-        function gainXP(amount) {
-            player.xp += amount;
-            while (player.xp >= player.maxXp) {
-                player.xp -= player.maxXp;
-                player.level++;
-                player.maxXp = player.level * 10; // Her seviyede XP gereksinimi artar
-            }
-            updateUI();
-        }
-
-        function updateUI() {
-            const fillPercent = Math.min(100, (player.xp / player.maxXp) * 100);
-            document.getElementById('xp-bar-fill').style.width = `${fillPercent}%`;
-            document.getElementById('xp-text').innerText = `${player.xp} / ${player.maxXp} XP (Lvl ${player.level})`;
-        }
-
-        function startGame() {
-            const inputName = document.getElementById('username-input').value.trim();
-            if (inputName) player.name = inputName;
-
-            document.getElementById('auth-screen').style.display = 'none';
-            document.getElementById('game-ui').style.display = 'block';
-
-            initMobs();
-            updateUI();
-            requestAnimationFrame(gameLoop);
-        }
-
-        // FİZİK & HAREKET UPDATE
-        function updateGame() {
-            let dx = 0, dy = 0;
-            if (keys['w'] || keys['arrowup']) dy -= 1;
-            if (keys['s'] || keys['arrowdown']) dy += 1;
-            if (keys['a'] || keys['arrowleft']) dx -= 1;
-            if (keys['d'] || keys['arrowright']) dx += 1;
-
-            if (joyActive) {
-                dx = joyVector.x;
-                dy = joyVector.y;
-            }
-
-            if (dx !== 0 || dy !== 0) {
-                const len = Math.hypot(dx, dy) || 1;
-                player.x += (dx / len) * player.speed;
-                player.y += (dy / len) * player.speed;
-                if (!player.isAttacking) {
-                    player.angle = Math.atan2(dy, dx);
-                }
-            }
-
-            // Sınır kontrolleri
-            player.x = Math.max(player.radius, Math.min(WORLD.width - player.radius, player.x));
-            player.y = Math.max(player.radius, Math.min(WORLD.height - player.radius, player.y));
-
-            if (player.attackTimer > 0) {
-                player.attackTimer--;
-                if (player.attackTimer === 0) player.isAttacking = false;
-            }
-
-            // Mob Yapay Zekası & Gezinme
-            mobs.forEach(mob => {
-                mob.moveTimer++;
-                if (mob.moveTimer > 120) {
-                    mob.vx = (Math.random() - 0.5) * 1.5;
-                    mob.vy = (Math.random() - 0.5) * 1.5;
-                    mob.moveTimer = 0;
-                }
-                mob.x += mob.vx;
-                mob.y += mob.vy;
-
-                // Sınırda tut
-                mob.x = Math.max(mob.radius, Math.min(WORLD.width - mob.radius, mob.x));
-                mob.y = Math.max(mob.radius, Math.min(WORLD.height - mob.radius, mob.y));
-            });
-        }
-
-        // DÜNYA BİYOM RENK GEÇİŞLERİ (DİKEY AÇIDAN RENK DEĞİŞİMİ)
-        function drawBackground(camX, camY) {
-            // Y: 0 (Karanlık/Siyah) -> Y: 1800 (Turuncu) -> Y: 3200 (Yeşil Çimen)
-            let grad = ctx.createLinearGradient(0, -camY, 0, WORLD.height - camY);
-            grad.addColorStop(0.0, "#090d16"); // Karanlık Zombi/İskelet Alanı
-            grad.addColorStop(0.3, "#2d180c"); // Siyah-Turuncu geçiş
-            grad.addColorStop(0.55, "#d97706"); // Turuncu Yaban Domuzu Alanı
-            grad.addColorStop(0.75, "#15803d"); // Canlı Yeşil Çimenlik
-            grad.addColorStop(1.0, "#166534"); // Çimen Alanı Alt Sınır
-
-            ctx.fillStyle = grad;
-            ctx.fillRect(-camX, -camY, WORLD.width, WORLD.height);
-
-            //Izgara Çizgileri (Görsel Derinlik)
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.03)";
-            ctx.lineWidth = 1;
-            const gridSize = 100;
-            const startX = Math.floor(camX / gridSize) * gridSize;
-            const startY = Math.floor(camY / gridSize) * gridSize;
-
-            for (let x = startX; x < camX + canvas.width; x += gridSize) {
-                ctx.beginPath();
-                ctx.moveTo(x - camX, 0);
-                ctx.lineTo(x - camX, canvas.height);
-                ctx.stroke();
-            }
-            for (let y = startY; y < camY + canvas.height; y += gridSize) {
-                ctx.beginPath();
-                ctx.moveTo(0, y - camY);
-                ctx.lineTo(canvas.width, y - camY);
-                ctx.stroke();
-            }
-        }
-
-        // OYUN DÖNGÜSÜ
-        function gameLoop() {
-            updateGame();
-
-            const camX = player.x - canvas.width / 2;
-            const camY = player.y - canvas.height / 2;
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // 1. Biyom Haritası
-            drawBackground(camX, camY);
-
-            // 2. Mobları Çiz
-            mobs.forEach(mob => {
-                const screenX = mob.x - camX;
-                const screenY = mob.y - camY;
-
-                if (screenX < -60 || screenX > canvas.width + 60 || screenY < -60 || screenY > canvas.height + 60) return;
-
-                // Mob Gövdesi
-                ctx.beginPath();
-                ctx.arc(screenX, screenY, mob.radius, 0, Math.PI * 2);
-                ctx.fillStyle = mob.color;
-                ctx.fill();
-                ctx.strokeStyle = "#0f172a";
-                ctx.lineWidth = 2;
-                ctx.stroke();
-
-                // İnek Deseni Özel Çizim
-                if (mob.spotColor) {
-                    ctx.fillStyle = mob.spotColor;
-                    ctx.beginPath();
-                    ctx.arc(screenX - 6, screenY - 5, 5, 0, Math.PI * 2);
-                    ctx.arc(screenX + 8, screenY + 4, 7, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-
-                // Can Barı
-                if (mob.hp < mob.maxHp) {
-                    const barW = 36;
-                    const barH = 5;
-                    ctx.fillStyle = "rgba(0,0,0,0.6)";
-                    ctx.fillRect(screenX - barW/2, screenY - mob.radius - 18, barW, barH);
-                    ctx.fillStyle = "#ef4444";
-                    ctx.fillRect(screenX - barW/2, screenY - mob.radius - 18, barW * (mob.hp / mob.maxHp), barH);
-                }
-
-                // Isim ve Level
-                ctx.fillStyle = "#ffffff";
-                ctx.font = "bold 11px sans-serif";
-                ctx.textAlign = "center";
-                ctx.shadowColor = "#000";
-                ctx.shadowBlur = 4;
-                ctx.fillText(`${mob.name} [Lvl ${mob.level}]`, screenX, screenY - mob.radius - 6);
-                ctx.shadowBlur = 0;
-            });
-
-            // 3. Oyuncu (Top) Çizimi
-            const pScreenX = player.x - camX;
-            const pScreenY = player.y - camY;
-
-            ctx.save();
-            ctx.translate(pScreenX, pScreenY);
-
-            // Top Karakter Gövdesi
-            ctx.beginPath();
-            ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
-            ctx.fillStyle = "#38bdf8";
-            ctx.fill();
-            ctx.strokeStyle = "#ffffff";
-            ctx.lineWidth = 3;
-            ctx.stroke();
-
-            // Yüklenen Resim (Topun Üstüne Maskeleme)
-            if (playerImage) {
-                ctx.save();
-                ctx.beginPath();
-                ctx.arc(0, 0, player.radius - 2, 0, Math.PI * 2);
-                ctx.clip();
-                ctx.drawImage(playerImage, -player.radius, -player.radius, player.radius * 2, player.radius * 2);
-                ctx.restore();
-            }
-
-            // Ele Alınan Tahta Kılıç (Slot 1 Seçiliyse)
-            if (player.selectedSlot === 0) {
-                ctx.rotate(player.angle + (player.isAttacking ? 0.4 : 0));
-
-                // Kılıç Kabzası
-                ctx.fillStyle = "#78350f";
-                ctx.fillRect(player.radius - 2, -4, 8, 8);
-                // Kılıç Siperliği
-                ctx.fillStyle = "#b45309";
-                ctx.fillRect(player.radius + 5, -8, 4, 16);
-                // Kılıç Namlusu (Tahta Kılıç)
-                ctx.fillStyle = "#d97706";
-                ctx.fillRect(player.radius + 9, -3, 26, 6);
-            }
-
-            ctx.restore();
-
-            // Oyuncu Üstündeki Isim ve Level
-            ctx.fillStyle = "#ffffff";
-            ctx.font = "bold 13px sans-serif";
-            ctx.textAlign = "center";
-            ctx.shadowColor = "#000";
-            ctx.shadowBlur = 5;
-            ctx.fillText(`${player.name} (Lvl ${player.level})`, pScreenX, pScreenY - player.radius - 12);
-            ctx.shadowBlur = 0;
-
-            requestAnimationFrame(gameLoop);
-        }
-    </script>
-</body>
-</html>
+        .hot-slot {
+            width: 48px;
+            height: 48px;
+            background: #1e293
